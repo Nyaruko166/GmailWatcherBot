@@ -10,7 +10,7 @@
     </parent>
     <groupId>me.nyaruko166</groupId>
     <artifactId>MailWatcherBot</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>1.0</version>
     <name>MailWatcherBot</name>
     <description>MailWatcherBot</description>
     <url/>
@@ -56,6 +56,16 @@
             <groupId>com.google.apis</groupId>
             <artifactId>google-api-services-gmail</artifactId>
             <version>v1-rev20240520-2.0.0</version>
+        </dependency>
+        <dependency>
+            <groupId>com.google.code.gson</groupId>
+            <artifactId>gson</artifactId>
+            <version>2.11.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <version>1.18.34</version>
         </dependency>
     </dependencies>
 
