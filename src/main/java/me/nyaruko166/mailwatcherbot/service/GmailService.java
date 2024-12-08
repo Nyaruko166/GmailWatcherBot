@@ -12,9 +12,8 @@ import com.google.api.client.json.gson.GsonFactory;
 import com.google.api.client.util.store.FileDataStoreFactory;
 import com.google.api.services.gmail.Gmail;
 import com.google.api.services.gmail.GmailScopes;
-import com.google.api.services.gmail.model.Label;
-import com.google.api.services.gmail.model.ListLabelsResponse;
-import com.google.api.services.gmail.model.ListMessagesResponse;
+import com.google.api.services.gmail.model.History;
+import com.google.api.services.gmail.model.ListHistoryResponse;
 import com.google.api.services.gmail.model.Message;
 import com.google.api.services.gmail.model.WatchRequest;
 import com.google.api.services.gmail.model.WatchResponse;
@@ -24,8 +23,13 @@ import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.math.BigInteger;
 import java.security.GeneralSecurityException;
+import java.util.Base64;
 import java.util.Collections;
 import java.util.List;
 import java.util.Scanner;
@@ -41,7 +45,7 @@ public class GmailService {
      * Global instance of the scopes required by this quickstart.
      * If modifying these scopes, delete your previously saved tokens/ folder.
      */
-    private static final List<String> SCOPES = List.of(GmailScopes.GMAIL_READONLY, GmailScopes.GMAIL_METADATA, GmailScopes.GMAIL_LABELS);
+    private static final List<String> SCOPES = Collections.singletonList(GmailScopes.GMAIL_MODIFY);
     //Change according to your credentials secret file
     private static final String CREDENTIALS_FILE_PATH = "./libs/gmail_cred.json";
     private static final Logger log = LogManager.getLogger(GmailService.class);
@@ -55,7 +59,8 @@ public class GmailService {
      */
     private static Credential getCredentials(final NetHttpTransport HTTP_TRANSPORT, String email) throws IOException {
         // Load client secrets.
-        GoogleClientSecrets clientSecrets = GoogleClientSecrets.load(JSON_FACTORY, new InputStreamReader(new FileInputStream(CREDENTIALS_FILE_PATH)));
+        GoogleClientSecrets clientSecrets =
+                GoogleClientSecrets.load(JSON_FACTORY, new InputStreamReader(new FileInputStream(CREDENTIALS_FILE_PATH)));
 
         // Build flow and trigger user authorization request.
         GoogleAuthorizationCodeFlow flow = new GoogleAuthorizationCodeFlow.Builder(HTTP_TRANSPORT, JSON_FACTORY, clientSecrets, SCOPES).setDataStoreFactory(new FileDataStoreFactory(new java.io.File(TOKENS_DIRECTORY_PATH))).setAccessType("offline").setApprovalPrompt("force").build();
@@ -70,8 +75,7 @@ public class GmailService {
         if (!libFolder.exists()) {
             libFolder.mkdir();
         }
-        GmailService gmailService = new GmailService();
-        gmailService.autoWatcher();
+        autoWatcher();
     }
 
     public Gmail getGmailService(String email) {
@@ -86,6 +90,7 @@ public class GmailService {
         }
     }
 
+    //Todo: Set up cron job renew watching every day
     public void autoWatcher() {
         try {
             File clientSecrets = new File("./libs/StoredCredential");
@@ -102,11 +107,11 @@ public class GmailService {
                     log.info("Please navigate to ./libs to input your email");
                     System.exit(0);
                 }
-                Scanner fileReader = new Scanner(emailFile);
-                while (fileReader.hasNextLine()) {
-                    String email = fileReader.nextLine();
-                    log.info(email);
-                }
+            }
+            Scanner fileReader = new Scanner(emailFile);
+            while (fileReader.hasNextLine()) {
+                String email = fileReader.nextLine();
+                startWatching(email);
             }
         } catch (IOException e) {
             log.error(e);
@@ -115,7 +120,7 @@ public class GmailService {
 
     public void startWatching(String email) {
         try {
-            Gmail userService = getGmailService("user");
+            Gmail userService = getGmailService(email);
             WatchRequest request = new WatchRequest();
             request.setLabelIds(Collections.singletonList("INBOX"));
             request.setTopicName("projects/gg-drive-api-439408/topics/gmail_notification");
@@ -127,56 +132,64 @@ public class GmailService {
         }
     }
 
-//    public static void main(String[] args) throws IOException {
-//        GmailService gmailService = new GmailService();
-//
-//        Gmail service = gmailService.getGmailService("user");
-//        Gmail service1 = gmailService.getGmailService("user1");
-//        ListMessagesResponse listResponse = service.users()
-//                .messages().list("me")
-//                .setLabelIds(Collections.singletonList("UNREAD"))
-//                .setMaxResults(Long.valueOf("10"))
-//                .execute();
-//
-//        List<Message> listMessages = listResponse.getMessages();
-//
-//        ListMessagesResponse listResponse1 = service1.users()
-//                .messages().list("me")
-//                .setLabelIds(Collections.singletonList("UNREAD"))
-//                .setMaxResults(Long.valueOf("10"))
-//                .execute();
-//
-//        List<Message> listMessages1 = listResponse1.getMessages();
-//
-//        // Fetch email subject from each message
-//        for (Message message : listMessages) {
-//            Message fullMessage = service.users().messages().get("me", message.getId()).setFormat("metadata").execute();
-//            fullMessage.getPayload().getHeaders().stream()
-//                    .filter(header -> "Subject".equalsIgnoreCase(header.getName()))
-//                    .findFirst()
-//                    .ifPresent(header -> System.out.println("Email Subject: " + header.getValue()));
-//        }
-//
-//        // Fetch email subject from each message
-//        System.out.println("User1:");
-//        for (Message message : listMessages1) {
-//            Message fullMessage = service1.users().messages().get("me", message.getId()).setFormat("metadata").execute();
-//            fullMessage.getPayload().getHeaders().stream()
-//                    .filter(header -> "Subject".equalsIgnoreCase(header.getName()))
-//                    .findFirst()
-//                    .ifPresent(header -> System.out.println("Email Subject: " + header.getValue()));
-//        }
+    public static void main(String[] args) throws IOException {
 
-//        ListLabelsResponse listResponse = service.users().labels().list("me").execute();
-//
-//        List<Label> labels = listResponse.getLabels();
-//        if (labels.isEmpty()) {
-//            System.out.println("No labels found.");
-//        } else {
-//            System.out.println("Labels:");
-//            for (Label label : labels) {
-//                System.out.printf("- %s\n", label.getName());
-//            }
-//        }
-//    }
+        GmailService gmailService = new GmailService();
+
+        Gmail service = gmailService.getGmailService("12312312312312");
+
+        // History ID from the Pub/Sub notification
+        String historyId = "6154894";
+
+        // Retrieve history list from Gmail
+        ListHistoryResponse historyResponse = service.users().history()
+                .list("me")
+                .setStartHistoryId(new BigInteger(historyId))
+                .execute();
+
+        // Process the history
+        List<History> histories = historyResponse.getHistory();
+        if (histories == null || histories.isEmpty()) {
+            System.out.println("No history found.");
+            return;
+        }
+
+        for (History history : histories) {
+            List<Message> lstMess = history.getMessages();
+            if (lstMess != null) {
+                for (Message newMess : lstMess) {
+                    String messageId = newMess.getId();
+
+                    // Fetch the full message details
+                    Message message = service.users().messages().get("me", messageId).setFormat("full").execute();
+
+                    // Print all message details
+                    System.out.println("Message ID: " + message.getId());
+                    System.out.println("Thread ID: " + message.getThreadId());
+                    System.out.println("Labels: " + message.getLabelIds());
+
+                    // Print headers
+//                    if (message.getPayload() != null && message.getPayload().getHeaders() != null) {
+//                        message.getPayload().getHeaders().forEach(header ->
+//                                System.out.println(header.getName() + ": " + header.getValue()));
+//                    }
+
+                    // Print email body (base64-decoded)
+                    if (message.getPayload() != null && message.getPayload().getBody() != null) {
+                        String bodyData = message.getPayload().getBody().getData();
+                        if (bodyData != null) {
+                            String body = new String(Base64.getUrlDecoder().decode(bodyData));
+                            System.out.println("Email Body: " + body);
+                        } else {
+                            System.out.println("No body found for this message.");
+                        }
+                    }
+
+                    System.out.println(message.getPayload());
+//                    System.out.println(message.getPayload().get);
+
+                }
+            }
+        }
+    }
 }
