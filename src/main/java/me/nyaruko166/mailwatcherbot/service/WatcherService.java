@@ -32,7 +32,7 @@ public class WatcherService {
 
         List<EmailDetail> lstEmail = gmailService.getEmails(jsonData);
         if (lstEmail != null) {
-//            lstEmail.forEach(System.out::println);
+            lstEmail.forEach(System.out::println);
             Bot.pushEmail(lstEmail);
         }
     }

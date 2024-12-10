@@ -39,7 +39,7 @@ public class MessageReceiveListener extends ListenerAdapter {
                     event.getChannel().sendMessageEmbeds(new EmbedBuilder()
                             .setAuthor(event.getAuthor().getName(),
                                     "https://www.facebook.com/nyaruko166", event.getAuthor().getAvatarUrl())
-                            .setTitle("Setting auto clip upload channel...")
+                            .setTitle("Using this channel for new email notification.")
                             .setDescription("Day la description? Cho cc gi?")
                             .setFooter(String.format("%s - %s",
                                             event.getJDA().getSelfUser().getName(),
