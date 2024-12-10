@@ -1,5 +1,9 @@
 package me.nyaruko166.mailwatcherbot.util;
 
+import me.nyaruko166.mailwatcherbot.model.EmailDetail;
+import net.dv8tion.jda.api.EmbedBuilder;
+import net.dv8tion.jda.api.entities.MessageEmbed;
+
 import java.time.format.DateTimeFormatter;
 import java.util.Base64;
 
@@ -16,5 +20,4 @@ public class GeneralHelper {
     public static String base64UrlDecoder(String base64String) {
         return new String(Base64.getUrlDecoder().decode(base64String));
     }
-
 }

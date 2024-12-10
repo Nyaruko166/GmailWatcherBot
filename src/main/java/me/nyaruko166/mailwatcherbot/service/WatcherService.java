@@ -2,6 +2,7 @@ package me.nyaruko166.mailwatcherbot.service;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
+import me.nyaruko166.mailwatcherbot.discord.Bot;
 import me.nyaruko166.mailwatcherbot.model.EmailDetail;
 import me.nyaruko166.mailwatcherbot.util.GeneralHelper;
 import org.apache.logging.log4j.LogManager;
@@ -31,7 +32,8 @@ public class WatcherService {
 
         List<EmailDetail> lstEmail = gmailService.getEmails(jsonData);
         if (lstEmail != null) {
-            lstEmail.forEach(System.out::println);
+//            lstEmail.forEach(System.out::println);
+            Bot.pushEmail(lstEmail);
         }
     }
 }

@@ -38,7 +38,10 @@ public class Config {
                     listEmail.add(EmailConfig.configTemplate());
                 }
                 FileUtils.writeStringToFile(
-                        configFile, gson.toJson(new AppConfig(listEmail, "", "", "")), StandardCharsets.UTF_8);
+                        configFile,
+                        gson.toJson(
+                                new AppConfig(listEmail, "", "", "", "", "")),
+                        StandardCharsets.UTF_8);
                 log.info("Config file created successfully.");
                 log.info("Please navigate to ./libs to setup app config");
                 System.exit(0);

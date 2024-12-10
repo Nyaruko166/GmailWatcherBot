@@ -9,7 +9,12 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 import me.nyaruko166.mailwatcherbot.util.GeneralHelper;
+import net.dv8tion.jda.api.EmbedBuilder;
+import net.dv8tion.jda.api.JDA;
+import net.dv8tion.jda.api.entities.MessageEmbed;
+import net.dv8tion.jda.api.entities.SelfUser;
 
+import java.awt.*;
 import java.util.List;
 
 @AllArgsConstructor
@@ -64,5 +69,18 @@ public class EmailDetail {
         emailDetail.setBodyPart(bodyPart);
 
         return emailDetail;
+    }
+
+    public MessageEmbed toEmbed(JDA api) {
+        SelfUser botInfo = api.getSelfUser();
+        return new EmbedBuilder()
+                .setColor(Color.GREEN)
+                .setAuthor(botInfo.getName(), "https://www.facebook.com/nyaruko166", botInfo.getAvatarUrl())
+                .setTitle(this.subject)
+                .setDescription(this.bodyPart == null ? "Thư rỗng?!" : this.bodyPart)
+                .addField("From: ", this.from, false)
+                .addField("To: ", this.to, false)
+                .setFooter("Ngày nhận: %s".formatted(date))
+                .build();
     }
 }

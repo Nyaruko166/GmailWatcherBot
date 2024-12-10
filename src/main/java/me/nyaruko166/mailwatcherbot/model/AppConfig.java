@@ -23,6 +23,10 @@ public class AppConfig {
 
     private String topicName;
 
+    private String discordToken;
+
+    private String guildId;
+
     private String channelId;
 
 }
