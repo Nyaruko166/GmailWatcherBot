@@ -26,7 +26,9 @@ public class WatcherService {
         JsonObject jsonData =
                 gson.fromJson(GeneralHelper.base64UrlDecoder(jsonMessage.get("data").getAsString()), JsonObject.class);
 
-        log.info(jsonData.toString());
+        log.info("Email: {} | HistoryId: {}",
+                jsonData.get("emailAddress").getAsString(), jsonData.get("historyId").getAsString());
+
         List<EmailDetail> lstEmail = gmailService.getEmails(jsonData);
         if (lstEmail != null) {
             lstEmail.forEach(System.out::println);

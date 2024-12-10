@@ -1,9 +1,7 @@
 package me.nyaruko166.mailwatcherbot.util;
 
-import com.google.common.reflect.TypeToken;
 import com.google.gson.Gson;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
+import me.nyaruko166.mailwatcherbot.model.AppConfig;
 import me.nyaruko166.mailwatcherbot.model.EmailConfig;
 import org.apache.commons.io.FileUtils;
 import org.apache.logging.log4j.LogManager;
@@ -14,6 +12,7 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 
@@ -25,22 +24,21 @@ public class Config {
 
     // Eager Singleton instance
     private static final Config instance = new Config();
-    private static List<EmailConfig> lstEmailConfig;
+    private static AppConfig appConfig;
 
     // Private constructor
     private Config() {
         if (!configFile.exists()) {
             try {
                 log.info("Creating config file...");
-                JsonArray tempJsonArr = new JsonArray();
-                String tempJson = gson.toJson(EmailConfig.configTemplate());
+                List<EmailConfig> listEmail = new ArrayList<>();
                 System.out.print("How many account do you want to watch? ");
                 int n = Integer.parseInt(new Scanner(System.in).nextLine());
                 for (int i = 0; i < n; i++) {
-                    tempJsonArr.add(gson.fromJson(tempJson, JsonElement.class));
+                    listEmail.add(EmailConfig.configTemplate());
                 }
                 FileUtils.writeStringToFile(
-                        configFile, tempJsonArr.toString(), StandardCharsets.UTF_8);
+                        configFile, gson.toJson(new AppConfig(listEmail, "", "")), StandardCharsets.UTF_8);
                 log.info("Config file created successfully.");
                 log.info("Please navigate to ./libs to setup app config");
                 System.exit(0);
@@ -54,8 +52,7 @@ public class Config {
     // Method to load the configuration
     private void loadConfig() {
         try {
-            lstEmailConfig = gson.fromJson(new FileReader(configFile), new TypeToken<List<EmailConfig>>() {
-            }.getType());
+            appConfig = gson.fromJson(new FileReader(configFile), AppConfig.class);
         } catch (FileNotFoundException e) {
             log.error("Error when loading config file", e);
         }
@@ -64,7 +61,7 @@ public class Config {
     // Method to update the configuration file
     public static void updateConfig() {
         try {
-            FileUtils.writeStringToFile(configFile, gson.toJsonTree(lstEmailConfig).getAsJsonArray().toString(), "UTF-8");
+            FileUtils.writeStringToFile(configFile, gson.toJson(appConfig), "UTF-8");
             log.info("Configuration updated successfully.");
         } catch (IOException e) {
             log.error("Failed to update config file", e);
@@ -72,13 +69,13 @@ public class Config {
     }
 
     // Combined method to access the AppConfig properties
-    public static List<EmailConfig> getProperty() {
-        return lstEmailConfig;
+    public static AppConfig getProperty() {
+        return appConfig;
     }
 
     public static String updateHistoryIdByEmail(String email, String newHistoryId) {
         String oldHistoryId = null;
-        for (EmailConfig emailConfig : lstEmailConfig) {
+        for (EmailConfig emailConfig : appConfig.getListEmail()) {
             if (emailConfig.getEmail().equalsIgnoreCase(email)) {
                 oldHistoryId = emailConfig.getLastHistoryId();
                 emailConfig.setLastHistoryId(newHistoryId);
@@ -86,9 +83,5 @@ public class Config {
         }
         updateConfig();
         return oldHistoryId;
-    }
-
-    public static void setLstEmailConfig(List<EmailConfig> lstEmailConfig) {
-        Config.lstEmailConfig = lstEmailConfig;
     }
 }

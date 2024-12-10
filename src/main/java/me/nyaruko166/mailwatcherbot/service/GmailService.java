@@ -99,7 +99,7 @@ public class GmailService {
 
     //Todo: Set up cron job renew watching every day
     public void autoWatcher() {
-        List<EmailConfig> lstConfig = Config.getProperty();
+        List<EmailConfig> lstConfig = Config.getProperty().getListEmail();
         lstConfig.forEach(emailConfig -> {
             if (emailConfig.getEmail().isBlank()) {
                 log.warn("Email is blank, skipping this empty mailbox. Please recheck the config later");
@@ -108,7 +108,7 @@ public class GmailService {
                 emailConfig.setLastHistoryId(historyId);
             }
         });
-        Config.setLstEmailConfig(lstConfig);
+        Config.getProperty().setListEmail(lstConfig);
         Config.updateConfig();
     }
 
@@ -116,10 +116,11 @@ public class GmailService {
         try {
             Gmail userService = getGmailService(email);
             WatchRequest request = new WatchRequest();
-            request.setLabelIds(Collections.singletonList("INBOX"));
-            request.setTopicName("projects/gg-drive-api-439408/topics/gmail_notification");
+            request.setLabelIds(Collections.singletonList("UNREAD"));
+            request.setTopicName("projects/%s/topics/%s"
+                    .formatted(Config.getProperty().getProjectId(), Config.getProperty().getTopicName()));
             request.setLabelFilterBehavior("INCLUDE");
-            WatchResponse watchResponse = userService.users().watch(email, request).execute();
+            WatchResponse watchResponse = userService.users().watch("me", request).execute();
             log.info("Start watching {}'s mailbox successfully!", email);
             log.info("History ID: {}", watchResponse.getHistoryId());
             return watchResponse.getHistoryId().toString();
@@ -140,7 +141,7 @@ public class GmailService {
 
             // Retrieve history list from Gmail
             ListHistoryResponse historyResponse = service.users().history()
-                    .list(email)
+                    .list("me")
                     .setStartHistoryId(new BigInteger(oldHistoryId))
                     .execute();
 
@@ -159,7 +160,7 @@ public class GmailService {
 
                         // Fetch the full message details
                         Message message = service.users()
-                                .messages().get(email, messageId)
+                                .messages().get("me", messageId)
                                 .setFormat("full").execute();
 
                         EmailDetail emailDetail = EmailDetail.toEmailDetail(message.getPayload());

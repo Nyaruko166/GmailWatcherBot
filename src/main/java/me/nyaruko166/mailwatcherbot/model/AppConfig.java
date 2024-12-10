@@ -7,22 +7,22 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 
+import java.util.List;
+
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
 @Setter
 @Builder
 @ToString
-public class EmailConfig {
+public class AppConfig {
 
-    private String email;
+    private List<EmailConfig> listEmail;
 
-    private String lastHistoryId;
+    private String projectId;
 
-    public static EmailConfig configTemplate(){
-        return EmailConfig.builder()
-                .email("")
-                .lastHistoryId("")
-                .build();
-    }
+    private String topicName;
+
+    private String channelId;
+
 }
