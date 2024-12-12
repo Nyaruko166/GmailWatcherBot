@@ -31,12 +31,9 @@ public class Bot {
     }
 
     public static void pushEmail(List<EmailDetail> lstEmail) {
-        lstEmail.forEach(emailDetail -> {
-//            System.out.println(emailDetail.toEmbed());
-            api.getGuildById(Config.getProperty().getGuildId())
-               .getTextChannelById(Config.getProperty().getChannelId())
-               .sendMessageEmbeds(emailDetail.toEmbed()).queue();
-        });
+        lstEmail.forEach(emailDetail -> api.getGuildById(Config.getProperty().getGuildId())
+                                       .getTextChannelById(Config.getProperty().getChannelId())
+                                       .sendMessageEmbeds(emailDetail.toEmbed()).queue());
     }
 
 }

@@ -26,6 +26,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
+import org.springframework.scheduling.annotation.EnableScheduling;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
@@ -39,6 +41,7 @@ import java.util.Collections;
 import java.util.List;
 
 @Service
+@EnableScheduling
 public class GmailService {
 
     private static final String APPLICATION_NAME = "Gmail API Jav";
@@ -76,13 +79,20 @@ public class GmailService {
         return new AuthorizationCodeInstalledApp(flow, receiver).authorize(email);
     }
 
+    @Scheduled(cron = "0 0 0 * * ?", zone = "Asia/Ho_Chi_Minh")
+    public void runAtMidnight(){
+        autoWatcher();
+        log.info("Auto renew watcher at midnight complete successfully!");
+    }
+
     @EventListener(ApplicationReadyEvent.class)
     public void doShesshOnStartup() {
         File libFolder = new File("./libs");
         if (!libFolder.exists()) {
             libFolder.mkdir();
         }
-        autoWatcher();
+
+        log.info("Start up scripts completed...");
     }
 
     public Gmail getGmailService(String email) {
@@ -97,15 +107,13 @@ public class GmailService {
         }
     }
 
-    //Todo: Set up cron job renew watching every day
     public void autoWatcher() {
         List<EmailConfig> lstConfig = Config.getProperty().getListEmail();
         lstConfig.forEach(emailConfig -> {
             if (emailConfig.getEmail().isBlank()) {
                 log.warn("Email is blank, skipping this empty mailbox. Please recheck the config later");
             } else {
-                String historyId = startWatching(emailConfig.getEmail());
-                emailConfig.setLastHistoryId(historyId);
+                emailConfig.setLastHistoryId(startWatching(emailConfig.getEmail()));
             }
         });
         Config.getProperty().setListEmail(lstConfig);

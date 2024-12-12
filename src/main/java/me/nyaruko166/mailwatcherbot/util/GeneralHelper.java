@@ -1,9 +1,5 @@
 package me.nyaruko166.mailwatcherbot.util;
 
-import me.nyaruko166.mailwatcherbot.model.EmailDetail;
-import net.dv8tion.jda.api.EmbedBuilder;
-import net.dv8tion.jda.api.entities.MessageEmbed;
-
 import java.time.format.DateTimeFormatter;
 import java.util.Base64;
 

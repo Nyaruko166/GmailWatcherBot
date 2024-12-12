@@ -73,11 +73,11 @@ public class EmailDetail {
         return new EmbedBuilder()
                 .setColor(Color.GREEN)
 //                .setAuthor(botInfo.getName(), "https://www.facebook.com/nyaruko166", botInfo.getAvatarUrl())
-                .setTitle("Tiêu đề: ".formatted(this.subject))
+                .setTitle("Tiêu đề: %s".formatted(this.subject))
                 .addField("Người gửi: ", this.from, false)
                 .addField("Người nhận: ", this.to, false)
                 .addField("Nội dung: ", this.bodyPart == null ? "Thư rỗng?!" : this.bodyPart, false)
-                .setFooter("Ngày nhận: %s".formatted(date))
+                .setFooter("Ngày nhận: %s".formatted(this.date.replaceAll("\\s\\+\\d{4}$", "")))
                 .build();
     }
 }
